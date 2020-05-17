@@ -73,17 +73,6 @@ public class DashboardActivity extends AppCompatActivity {
                 CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
     }
 
-   /* private void updateCursor(){
-        getLastSearchedMoviesFromDB();
-        String[] suggestionArrayNew = new String[]{"test", "test1"};
-        Log.e(DashboardActivity.class.getCanonicalName(), "suggestion array1 : "+ Arrays.toString(suggestionArray)+" , suggestionArrayNew1 : "+Arrays.toString(suggestionArrayNew));
-
-        final MatrixCursor c = new MatrixCursor(new String[]{ BaseColumns._ID, "recent_search" });
-        for (int i=0; i<suggestionArray.length; i++) {
-            c.addRow(new Object[] {i, suggestionArray[i]});
-        }
-        mAdapter.changeCursor(c);
-    }*/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -98,6 +87,7 @@ public class DashboardActivity extends AppCompatActivity {
         searchView.setSearchableInfo(
                 searchManager.getSearchableInfo(getComponentName()));
 
+        //add suggestion adapter
         searchView.setSuggestionsAdapter(mAdapter);
         searchView.setIconifiedByDefault(false);
 
@@ -137,12 +127,14 @@ public class DashboardActivity extends AppCompatActivity {
         return true;
     }
 
+    //fetching recent search from db
     private void getLastSearchedMoviesFromDB() {
         allMoviesViewModel.getLastSearchedDBMovies().removeObservers(this);
         final ArrayList<String> searchedMovies = new ArrayList<>();
         allMoviesViewModel.getLastSearchedDBMovies().observe(this, new Observer<List<RecentSearchedMovies>>() {
             @Override
             public void onChanged(@Nullable List<RecentSearchedMovies> SearchedMoviesList) {
+                searchedMovies.clear();
                 for(RecentSearchedMovies movies : SearchedMoviesList) {
                     searchedMovies.add(movies.getOriginalTitle());
                 }

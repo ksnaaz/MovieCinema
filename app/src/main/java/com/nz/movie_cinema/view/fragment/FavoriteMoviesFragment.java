@@ -41,6 +41,8 @@ public class FavoriteMoviesFragment extends Fragment implements ItemClickListene
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         favoriteMoviesViewModel = ViewModelProviders.of(this).get(FavoriteMoviesViewModel.class);
+
+        //fetching favorite movies and showing on view
         fragmentFavmoviesBinding.rvMovies.setLayoutManager(new LinearLayoutManager(getActivity()));
         favMoviesAdapter = new FavMoviesAdapter(getActivity(), this);
         fragmentFavmoviesBinding.rvMovies.setAdapter(favMoviesAdapter);

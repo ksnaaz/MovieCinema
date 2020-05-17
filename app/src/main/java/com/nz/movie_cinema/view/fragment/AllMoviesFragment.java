@@ -49,6 +49,7 @@ public class AllMoviesFragment extends Fragment implements FavouriteClickListene
     private AllMoviesViewModel allMoviesViewModel;
     private boolean isLoading = false;
     private int pageCount = 1;
+    private boolean isFiltered = false;
 
     @Nullable
     @Override
@@ -62,7 +63,7 @@ public class AllMoviesFragment extends Fragment implements FavouriteClickListene
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        allMoviesViewModel = ViewModelProviders.of(this).get(AllMoviesViewModel.class);
+        allMoviesViewModel = ViewModelProviders.of(getActivity()).get(AllMoviesViewModel.class);
 
         fragmentAllmoviesBinding.rvMovies.setLayoutManager(new LinearLayoutManager(getActivity()));
         allMoviesAdapter = new AllLatestMoviesAdapter(getActivity(), this, this, this);
@@ -71,12 +72,17 @@ public class AllMoviesFragment extends Fragment implements FavouriteClickListene
         loadData();
         initScrollListener();
 
+        //filter list by search
         allMoviesViewModel.getFilter().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 if (s.isEmpty()) {
+                    pageCount = 1;
+                    isFiltered = false;
+                    allMoviesAdapter.clearData();
                     loadData();
                 } else {
+                    isFiltered = true;
                     allMoviesAdapter.getFilter().filter(s);
                 }
             }
@@ -99,18 +105,24 @@ public class AllMoviesFragment extends Fragment implements FavouriteClickListene
         startActivity(i);
     }
 
+    //fetching popular movie data
     private void loadData() {
+        if(isFiltered) return;
+        removeObservers();
         allMoviesViewModel.getMovieList(pageCount).observe(this, new Observer<MoviePageResult>() {
             @Override
             public void onChanged(@Nullable MoviePageResult moviePageResult) {
+                if(pageCount != moviePageResult.getPage()) return;
                 Log.e(TAG, "(onchanged Called) : moviePageResult page number = "+moviePageResult.getPage());
                 isLoading = false;
+                pageCount++;
                 allMoviesAdapter.addDataIntoList(moviePageResult.getMovieResult());
 
             }
         });
     }
 
+    //adding recent search data in db
     @Override
     public void onUpdateSearchedItem(List<Movies> searchedMoviesList) {
         for (Movies movies : searchedMoviesList) {
@@ -119,6 +131,7 @@ public class AllMoviesFragment extends Fragment implements FavouriteClickListene
             recentSearchedMovies.setOriginalTitle(movies.getOriginalTitle());
             allMoviesViewModel.addSearchedMovie(recentSearchedMovies);
         }
+
     }
 
     private void initScrollListener() {
@@ -142,21 +155,19 @@ public class AllMoviesFragment extends Fragment implements FavouriteClickListene
                 }
             }
         });
-
-
     }
 
+    //calling loadmore bu pages
     private void loadMore() {
-        removeObservers();
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                pageCount++;
                 loadData();
             }
-        },2000);
+        },1000);
     }
 
+    //removing popular movies observer
     private void removeObservers(){
         final MutableLiveData<MoviePageResult> observable = allMoviesViewModel.getMovieList(pageCount);
         if(observable!=null

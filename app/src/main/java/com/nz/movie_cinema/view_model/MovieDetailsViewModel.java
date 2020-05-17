@@ -32,6 +32,7 @@ public class MovieDetailsViewModel extends AndroidViewModel {
         this.mutableMovieVideosLiveData = new MutableLiveData<>();
     }
 
+    //api call to get movie summary
     public LiveData<MovieDetails> getMovieDetails(int videoId) {
         return getMutableLiveDataOfMovieDetail(videoId);
     }
@@ -54,6 +55,7 @@ public class MovieDetailsViewModel extends AndroidViewModel {
         return mutableMovieDetailsLiveData;
     }
 
+    //api call to get movie cast and crew
     public LiveData<MovieCastCrew> getMovieCastCrew(int videoId) {
         return getMutableLiveDataOfMovieCastCrew(videoId);
     }
@@ -76,6 +78,7 @@ public class MovieDetailsViewModel extends AndroidViewModel {
         return mutableMovieCastCrewLiveData;
     }
 
+    //api call to get similar movies
     public LiveData<SimilarMovies> getSimilarMovies(int videoId) {
         return getMutableLiveDataOfSimilarMovies(videoId);
     }
@@ -100,6 +103,7 @@ public class MovieDetailsViewModel extends AndroidViewModel {
         return mutableSimilarMoviesLiveData;
     }
 
+    //api call to get movie videos
     public LiveData<MovieVideos> getMovieVideos(int videoId) {
         return getMutableLiveDataOfMovieVideos(videoId);
     }

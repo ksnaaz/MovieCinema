@@ -28,7 +28,6 @@ public class AllMoviesViewModel extends AndroidViewModel {
 
     private MoviesDbFactory moviesDbFactory;
     private RestApiRepository restApiRepository;
-    private MutableLiveData<MoviePageResult> mutableLatestMoviesLiveData;
     private LiveData<List<RecentSearchedMovies>> mSearchedMovies;
     private MutableLiveData<String> getFilter;
 
@@ -40,37 +39,37 @@ public class AllMoviesViewModel extends AndroidViewModel {
         getFilter = new MutableLiveData<>();
     }
 
+    //adding favorite movie in db
     public void addFavouriteMovie(Movies movie) {
         moviesDbFactory.addFavItem(movie);
     }
 
+    //deleting favorite movie in db
     public void deleteFavouriteMovie(Movies movie) {
         moviesDbFactory.deleteFavItem(movie);
     }
 
+    //calling api to get popular movies
     public MutableLiveData<MoviePageResult> getMovieList(int page) {
-        if (mutableLatestMoviesLiveData == null) {
-            mutableLatestMoviesLiveData = restApiRepository.loadMovies(page);
-        }
         return restApiRepository.loadMovies(page);
     }
 
+    //get recent searched movie from db
     public LiveData<List<RecentSearchedMovies>> getLastSearchedDBMovies() {
         return mSearchedMovies;
     }
 
+    //adding recent searched movie in db
     public void addSearchedMovie(RecentSearchedMovies recentSearchedMovies) {
         moviesDbFactory.addRecentSearchedItem(recentSearchedMovies);
     }
 
-    public void deleteSearchedMovie(RecentSearchedMovies movie) {
-        moviesDbFactory.deleteSearchedItem(movie);
-    }
-
+    //get filter mutable livedata on search query submit
     public LiveData<String> getFilter() {
         return getFilter;
     }
 
+    //search query apply to get gilter
     public void setSearchQuery(String searchQuery) {
         getFilter.setValue(searchQuery);
     }

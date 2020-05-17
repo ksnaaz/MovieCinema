@@ -49,6 +49,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
             }
         });
 
+        //fetching movie cast and crew
         movieDetailsBinding.rvMovieCast.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL,false ));
         movieCastAdapter = new MovieCastAdapter(this);
         movieDetailsBinding.rvMovieCast.setAdapter(movieCastAdapter);
@@ -65,6 +66,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
             }
         });
 
+        //fetching similar movies
         movieDetailsBinding.rvMovieSimilar.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL,false ));
         similarMoviesAdapter = new SimilarMoviesAdapter(this);
         movieDetailsBinding.rvMovieSimilar.setAdapter(similarMoviesAdapter);
@@ -75,6 +77,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
             }
         });
 
+        //fetching movie videos
         movieDetailsBinding.rvMovieVideos.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL,false ));
         movieVideosAdapter = new MovieVideosAdapter(this);
         movieDetailsBinding.rvMovieVideos.setAdapter(movieVideosAdapter);
@@ -96,6 +99,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         });
     }
 
+    //set summary of movie
     private void setDataInView(MovieDetails movieDetails) {
         Picasso.with(movieDetailsBinding.bannerImage.getContext()).load(AppUtil.movieImagePathBuilder(movieDetails.getPoster_path())).placeholder(R.drawable.movie_detail_placeholder).fit().centerCrop().into(movieDetailsBinding.bannerImage);
         movieDetailsBinding.circularProgressbar.setProgress(movieDetails.getVote_average()*10, 100);

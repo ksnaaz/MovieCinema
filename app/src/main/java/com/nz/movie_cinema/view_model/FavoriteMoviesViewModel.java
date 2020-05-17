@@ -25,6 +25,7 @@ public class FavoriteMoviesViewModel extends AndroidViewModel {
         mFavMovies = moviesDbFactory.getAllFavMovies();
     }
 
+    //fetching favorite movies from db
     public LiveData<List<Movies>> getFavMovies() { return mFavMovies; }
 
 }
