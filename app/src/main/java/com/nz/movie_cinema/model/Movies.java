@@ -10,7 +10,7 @@ import android.support.v7.util.DiffUtil;
 import com.google.gson.annotations.SerializedName;
 
 @SuppressWarnings("ALL")
-@Entity(tableName = "movies_table")
+@Entity(tableName = "fav_movies_table")
 public class Movies implements Parcelable {
     @SerializedName("vote_count")
     private int voteCount;
@@ -40,7 +40,6 @@ public class Movies implements Parcelable {
     @SerializedName("release_date")
     private String releaseDate;
     private boolean isFavorite;
-    private boolean isRecentSearch;
 
     public Movies(){
 
@@ -158,14 +157,6 @@ public class Movies implements Parcelable {
         isFavorite = favorite;
     }
 
-    public boolean isRecentSearch() {
-        return isRecentSearch;
-    }
-
-    public void setRecentSearch(boolean recentSearch) {
-        isRecentSearch = recentSearch;
-    }
-
     protected Movies(Parcel in) {
         id = in.readInt();
         voteCount = in.readInt();
@@ -180,7 +171,6 @@ public class Movies implements Parcelable {
         overview = in.readString();
         releaseDate = in.readString();
         isFavorite = in.readByte() != 0;
-        isRecentSearch = in.readByte() != 0;
     }
 
     @Override
@@ -198,7 +188,6 @@ public class Movies implements Parcelable {
         dest.writeString(overview);
         dest.writeString(releaseDate);
         dest.writeByte((byte) (isFavorite ? 1 : 0));
-        dest.writeByte((byte) (isRecentSearch ? 1 : 0));
     }
 
     @Override

@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.nz.movie_cinema.R;
@@ -26,13 +27,15 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AllLatestMoviesAdapter extends RecyclerView.Adapter<AllLatestMoviesAdapter.MoviesItemViewHolder> implements Filterable {
+public class AllLatestMoviesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Filterable {
     private Context context;
     private List<Movies> moviesArrayList;
     private LayoutInflater mInflater;
     private ItemClickListener itemClickListener;
     private FavouriteClickListener favouriteClickListener;
     private UpdateSearchedItemListener searchedItemListener;
+    private final int VIEW_TYPE_ITEM = 0;
+    private final int VIEW_TYPE_LOADING = 1;
 
     public AllLatestMoviesAdapter(Context mContext, ItemClickListener clickListener,
                                   FavouriteClickListener favouriteClickListener, UpdateSearchedItemListener updateSearchedItemListener) {
@@ -46,13 +49,31 @@ public class AllLatestMoviesAdapter extends RecyclerView.Adapter<AllLatestMovies
 
     @NonNull
     @Override
-    public MoviesItemViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view = mInflater.inflate(R.layout.item_movie_card, viewGroup, false);
-        return new MoviesItemViewHolder(view);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
+        if (viewType == VIEW_TYPE_ITEM) {
+            View view = mInflater.inflate(R.layout.item_movie_card, viewGroup, false);
+            return new ItemViewHolder(view);
+        } else {
+            View view = mInflater.inflate(R.layout.loading_layout, viewGroup, false);
+            return new LoadingViewHolder(view);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull final MoviesItemViewHolder viewHolder, final int i) {
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int position) {
+        if (viewHolder instanceof ItemViewHolder) {
+            populateItemRows((ItemViewHolder) viewHolder, position);
+        } else if (viewHolder instanceof LoadingViewHolder) {
+            showLoadingView((LoadingViewHolder) viewHolder, position);
+        }
+    }
+
+    private void showLoadingView(LoadingViewHolder viewHolder, int position) {
+        //ProgressBar would be displayed
+
+    }
+
+    private void populateItemRows(final ItemViewHolder viewHolder, final int i) {
         Movies movie = moviesArrayList.get(i);
         viewHolder.title.setText(movie.getOriginalTitle());
         viewHolder.releasedDate.setText("Released on : "+AppUtil.changeDateFormat(movie.getReleaseDate()));
@@ -74,12 +95,52 @@ public class AllLatestMoviesAdapter extends RecyclerView.Adapter<AllLatestMovies
                 favouriteClickListener.onFavClick(moviesArrayList.get(i), !isAlreadyFavorite);
             }
         });
+
     }
+
 
     @Override
     public int getItemCount() {
-        return moviesArrayList.size();
+        return moviesArrayList == null ? 0 : moviesArrayList.size();
     }
+
+    @Override
+    public int getItemViewType(int position) {
+        return moviesArrayList.get(position) == null ? VIEW_TYPE_LOADING : VIEW_TYPE_ITEM;
+    }
+
+    private class ItemViewHolder extends RecyclerView.ViewHolder {
+
+        private View itemView;
+        private ImageView itemImage;
+        private TextView title;
+        private TextView releasedDate;
+        private TextView languages;
+        private CardView cardView;
+        private ImageView favIcon;
+
+        public ItemViewHolder(@NonNull View itemView) {
+            super(itemView);
+            this.itemView = itemView;
+            itemImage = itemView.findViewById(R.id.item_image);
+            cardView = itemView.findViewById(R.id.root_view);
+            title = itemView.findViewById(R.id.title);
+            releasedDate = itemView.findViewById(R.id.released_date);
+            languages = itemView.findViewById(R.id.languages);
+            favIcon = itemView.findViewById(R.id.fav_icon);
+        }
+    }
+
+    private class LoadingViewHolder extends RecyclerView.ViewHolder {
+
+        ProgressBar progressBar;
+
+        public LoadingViewHolder(@NonNull View itemView) {
+            super(itemView);
+            progressBar = itemView.findViewById(R.id.progressBar);
+        }
+    }
+
 
     @Override
     public Filter getFilter() {
@@ -115,45 +176,19 @@ public class AllLatestMoviesAdapter extends RecyclerView.Adapter<AllLatestMovies
 
             @Override
             protected void publishResults(CharSequence charSequence, FilterResults filterResults) {
+                moviesArrayList.clear();
                 addDataIntoList((ArrayList<Movies>) filterResults.values);
                 searchedItemListener.onUpdateSearchedItem((ArrayList<Movies>) filterResults.values);
             }
         };
     }
 
-    public class MoviesItemViewHolder extends RecyclerView.ViewHolder {
-
-        private View itemView;
-        private ImageView itemImage;
-        private TextView title;
-        private TextView releasedDate;
-        private TextView languages;
-        private CardView cardView;
-        private ImageView favIcon;
-
-        public MoviesItemViewHolder(@NonNull View itemView) {
-            super(itemView);
-            this.itemView = itemView;
-            itemImage = itemView.findViewById(R.id.item_image);
-            cardView = itemView.findViewById(R.id.root_view);
-            title = itemView.findViewById(R.id.title);
-            releasedDate = itemView.findViewById(R.id.released_date);
-            languages = itemView.findViewById(R.id.languages);
-            favIcon = itemView.findViewById(R.id.fav_icon);
-        }
-    }
-
     public void addDataIntoList(List<Movies> moviesList) {
-        moviesArrayList.clear();
         moviesArrayList.addAll(moviesList);
         notifyDataSetChanged();
     }
 
     public List<Movies> getAdapterList(){
         return moviesArrayList;
-    }
-    public void updateList(List<Movies> moviesList){
-        moviesArrayList.clear();
-        moviesArrayList.addAll(moviesList);
     }
 }

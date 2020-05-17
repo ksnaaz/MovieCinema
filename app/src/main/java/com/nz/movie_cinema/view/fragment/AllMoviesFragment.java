@@ -1,13 +1,18 @@
 package com.nz.movie_cinema.view.fragment;
 
+import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -21,6 +26,7 @@ import com.nz.movie_cinema.databinding.FragmentAllmoviesBinding;
 import com.nz.movie_cinema.model.MovieDetails;
 import com.nz.movie_cinema.model.MoviePageResult;
 import com.nz.movie_cinema.model.Movies;
+import com.nz.movie_cinema.model.RecentSearchedMovies;
 import com.nz.movie_cinema.utils.AppUtil;
 import com.nz.movie_cinema.utils.FavouriteClickListener;
 import com.nz.movie_cinema.utils.ItemClickListener;
@@ -41,7 +47,8 @@ public class AllMoviesFragment extends Fragment implements FavouriteClickListene
     private FragmentAllmoviesBinding fragmentAllmoviesBinding;
     private AllLatestMoviesAdapter allMoviesAdapter;
     private AllMoviesViewModel allMoviesViewModel;
-    List<Movies> tempList = new ArrayList<>();
+    private boolean isLoading = false;
+    private int pageCount = 1;
 
     @Nullable
     @Override
@@ -55,52 +62,25 @@ public class AllMoviesFragment extends Fragment implements FavouriteClickListene
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        allMoviesViewModel = ViewModelProviders.of(getActivity()).get(AllMoviesViewModel.class);
+        allMoviesViewModel = ViewModelProviders.of(this).get(AllMoviesViewModel.class);
 
         fragmentAllmoviesBinding.rvMovies.setLayoutManager(new LinearLayoutManager(getActivity()));
         allMoviesAdapter = new AllLatestMoviesAdapter(getActivity(), this, this, this);
         fragmentAllmoviesBinding.rvMovies.setAdapter(allMoviesAdapter);
 
         loadData();
+        initScrollListener();
 
-        fragmentAllmoviesBinding.searchEdit.setOnClickListener(new View.OnClickListener() {
+        allMoviesViewModel.getFilter().observe(this, new Observer<String>() {
             @Override
-            public void onClick(View v) {
-                fragmentAllmoviesBinding.searchEdit.setFocusableInTouchMode(true);
-                fragmentAllmoviesBinding.searchEdit.requestFocus();
-                AppUtil.showKeyboard(getActivity(), fragmentAllmoviesBinding.searchEdit);
-                if(tempList.size() == 0) {
-                    tempList.addAll(allMoviesAdapter.getAdapterList());
+            public void onChanged(@Nullable String s) {
+                if (s.isEmpty()) {
+                    loadData();
+                } else {
+                    allMoviesAdapter.getFilter().filter(s);
                 }
-                allMoviesAdapter.addDataIntoList(getLastSearchedMoviesFromDB());
             }
         });
-
-
-        fragmentAllmoviesBinding.searchEdit.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                    if (v.getText().length() > 0) {
-                        allMoviesAdapter.updateList(tempList);
-                        allMoviesAdapter.getFilter().filter(v.getText());
-                        return true;
-                    }
-                }
-                return false;
-            }
-        });
-
-        fragmentAllmoviesBinding.searchCancel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                allMoviesAdapter.addDataIntoList(tempList);
-                fragmentAllmoviesBinding.searchEdit.setText("");
-                fragmentAllmoviesBinding.searchCancel.setFocusableInTouchMode(false);
-                AppUtil.hideKeyboard(getActivity(), v);
-            }
-        });
-
     }
 
     @Override
@@ -108,7 +88,7 @@ public class AllMoviesFragment extends Fragment implements FavouriteClickListene
         if (isFavourite) {
             allMoviesViewModel.addFavouriteMovie(movie);
         } else {
-            allMoviesViewModel.updateFavouriteMovie(movie, false);
+            allMoviesViewModel.deleteFavouriteMovie(movie);
         }
     }
 
@@ -120,11 +100,13 @@ public class AllMoviesFragment extends Fragment implements FavouriteClickListene
     }
 
     private void loadData() {
-        allMoviesViewModel.getLatestMovies().removeObservers(this);
-        allMoviesViewModel.getLatestMovies().observe(this, new Observer<MoviePageResult>() {
+        allMoviesViewModel.getMovieList(pageCount).observe(this, new Observer<MoviePageResult>() {
             @Override
             public void onChanged(@Nullable MoviePageResult moviePageResult) {
+                Log.e(TAG, "(onchanged Called) : moviePageResult page number = "+moviePageResult.getPage());
+                isLoading = false;
                 allMoviesAdapter.addDataIntoList(moviePageResult.getMovieResult());
+
             }
         });
     }
@@ -132,20 +114,55 @@ public class AllMoviesFragment extends Fragment implements FavouriteClickListene
     @Override
     public void onUpdateSearchedItem(List<Movies> searchedMoviesList) {
         for (Movies movies : searchedMoviesList) {
-            allMoviesViewModel.addSearchedMovie(movies);
+            RecentSearchedMovies recentSearchedMovies = new RecentSearchedMovies();
+            recentSearchedMovies.setId(movies.getId());
+            recentSearchedMovies.setOriginalTitle(movies.getOriginalTitle());
+            allMoviesViewModel.addSearchedMovie(recentSearchedMovies);
         }
     }
 
-    private List<Movies> getLastSearchedMoviesFromDB() {
-        allMoviesViewModel.getLastSearchedDBMovies().removeObservers(this);
-        final List<Movies> searchedMovies = new ArrayList<>();
-        allMoviesViewModel.getLastSearchedDBMovies().observe(this, new Observer<List<Movies>>() {
+    private void initScrollListener() {
+        fragmentAllmoviesBinding.rvMovies.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onChanged(@Nullable List<Movies> SearchedMoviesList) {
-                searchedMovies.addAll(SearchedMoviesList);
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                LinearLayoutManager linearLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+
+                if (!isLoading) {
+                    if (linearLayoutManager != null && linearLayoutManager.findLastCompletelyVisibleItemPosition() == allMoviesAdapter.getAdapterList().size() - 1) {
+                        loadMore();
+                        isLoading = true;
+                    }
+                }
             }
         });
-        return searchedMovies;
+
+
+    }
+
+    private void loadMore() {
+        removeObservers();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                pageCount++;
+                loadData();
+            }
+        },2000);
+    }
+
+    private void removeObservers(){
+        final MutableLiveData<MoviePageResult> observable = allMoviesViewModel.getMovieList(pageCount);
+        if(observable!=null
+                && observable.hasObservers()) {
+            observable.removeObservers(this);
+        }
     }
 
 }

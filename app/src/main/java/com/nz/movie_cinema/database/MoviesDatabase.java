@@ -6,11 +6,13 @@ import android.arch.persistence.room.RoomDatabase;
 import android.content.Context;
 
 import com.nz.movie_cinema.model.Movies;
+import com.nz.movie_cinema.model.RecentSearchedMovies;
 
-@Database(entities = {Movies.class}, version = 1)
+@Database(entities = {Movies.class, RecentSearchedMovies.class}, version = 1)
 public abstract class MoviesDatabase extends RoomDatabase {
 
-    public abstract MoviesDao moviesDao();
+    public abstract FavMoviesDao favMoviesDao();
+    public abstract RecentSearchedMoviesDao recentSearchedMoviesDao();
 
     public static MoviesDatabase sInstance;
 

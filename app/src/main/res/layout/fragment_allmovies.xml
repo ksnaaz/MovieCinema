@@ -15,40 +15,7 @@
         android:background="@color/light_gray"
         >
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/_30sdp"
-            android:background="@drawable/rounded_edittext"
-            android:layout_margin="@dimen/_10sdp"
-            android:id="@+id/search_layout">
-
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/_30sdp"
-                android:imeOptions="actionSearch"
-                android:inputType="text"
-                android:id="@+id/search_edit"
-                android:layout_marginLeft="@dimen/_5sdp"
-                android:layout_toLeftOf="@+id/search_cancel"
-                android:textColor="@color/primary_text"
-                android:textSize="@dimen/_12sdp"
-                android:focusableInTouchMode="false"
-                android:fontFamily="@font/aller_rg"
-                />
-
-            <ImageView
-                android:id="@+id/search_cancel"
-                android:layout_width="@dimen/_20sdp"
-                android:layout_height="@dimen/_20sdp"
-                android:src="@android:drawable/ic_menu_close_clear_cancel"
-                android:layout_alignParentRight="true"
-                android:layout_centerVertical="true"
-                android:layout_margin="@dimen/_5sdp"/>
-
-        </RelativeLayout>
-
         <android.support.v7.widget.RecyclerView
-            android:layout_below="@+id/search_layout"
             android:id="@+id/rv_movies"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

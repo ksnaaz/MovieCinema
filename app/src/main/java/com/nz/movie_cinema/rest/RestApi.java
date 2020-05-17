@@ -14,7 +14,7 @@ import retrofit2.http.Query;
 public interface RestApi {
 
     @GET("movie/now_playing")
-    Call<MoviePageResult> getLatestMovies(@Query("api_key") String userkey);
+    Call<MoviePageResult> getLatestMovies(@Query("page") int page, @Query("api_key") String userkey);
 
     @GET("movie/{movie_id}")
     Call<MovieDetails> getMovieDetails(@Path("movie_id") int id, @Query("api_key") String userkey);

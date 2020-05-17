@@ -8,7 +8,9 @@ import android.arch.lifecycle.MutableLiveData;
 import com.nz.movie_cinema.database.MoviesDbFactory;
 import com.nz.movie_cinema.model.MoviePageResult;
 import com.nz.movie_cinema.model.Movies;
+import com.nz.movie_cinema.model.RecentSearchedMovies;
 import com.nz.movie_cinema.rest.RestApiFactory;
+import com.nz.movie_cinema.rest.RestApiRepository;
 
 import java.util.List;
 
@@ -25,64 +27,52 @@ import static com.nz.movie_cinema.BaseConstants.API_KEY;
 public class AllMoviesViewModel extends AndroidViewModel {
 
     private MoviesDbFactory moviesDbFactory;
+    private RestApiRepository restApiRepository;
     private MutableLiveData<MoviePageResult> mutableLatestMoviesLiveData;
-    private LiveData<List<Movies>> mSearchedMovies;
+    private LiveData<List<RecentSearchedMovies>> mSearchedMovies;
+    private MutableLiveData<String> getFilter;
 
     public AllMoviesViewModel(Application application) {
         super(application);
         moviesDbFactory = new MoviesDbFactory(application);
-        this.mutableLatestMoviesLiveData = new MutableLiveData<>();
-        mSearchedMovies = moviesDbFactory.getRecentSearchMovies();
+        restApiRepository = new RestApiRepository();
+        mSearchedMovies = moviesDbFactory.getmRecentSearchedMovies();
+        getFilter = new MutableLiveData<>();
     }
 
     public void addFavouriteMovie(Movies movie) {
-        if(moviesDbFactory.getItemById(movie.getId()).isEmpty()) {
-            moviesDbFactory.addItem(movie);
-        } else {
-            updateFavouriteMovie(movie, true);
+        moviesDbFactory.addFavItem(movie);
+    }
+
+    public void deleteFavouriteMovie(Movies movie) {
+        moviesDbFactory.deleteFavItem(movie);
+    }
+
+    public MutableLiveData<MoviePageResult> getMovieList(int page) {
+        if (mutableLatestMoviesLiveData == null) {
+            mutableLatestMoviesLiveData = restApiRepository.loadMovies(page);
         }
+        return restApiRepository.loadMovies(page);
     }
 
-    public void updateFavouriteMovie(Movies movie, boolean update) {
-        moviesDbFactory.updateFavoritsItem(movie, update);
+    public LiveData<List<RecentSearchedMovies>> getLastSearchedDBMovies() {
+        return mSearchedMovies;
     }
 
-    public LiveData<MoviePageResult> getLatestMovies() {
-        return getMutableLiveDataOfLatestMovies();
+    public void addSearchedMovie(RecentSearchedMovies recentSearchedMovies) {
+        moviesDbFactory.addRecentSearchedItem(recentSearchedMovies);
     }
 
-    public MutableLiveData<MoviePageResult> getMutableLiveDataOfLatestMovies() {
-
-        Call<MoviePageResult> call = RestApiFactory.create().getLatestMovies(API_KEY);
-        call.enqueue(new Callback<MoviePageResult>() {
-            @Override
-            public void onResponse(Call<MoviePageResult> call, Response<MoviePageResult> response) {
-                MoviePageResult movie = response.body();
-                if (movie != null) {
-                    mutableLatestMoviesLiveData.setValue(movie);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<MoviePageResult> call, Throwable t) { }
-        });
-        return mutableLatestMoviesLiveData;
+    public void deleteSearchedMovie(RecentSearchedMovies movie) {
+        moviesDbFactory.deleteSearchedItem(movie);
     }
 
-    public LiveData<List<Movies>> getLastSearchedDBMovies() { return mSearchedMovies; }
-
-    public void addSearchedMovie(Movies movie) {
-        if(moviesDbFactory.getItemById(movie.getId()).isEmpty()) {
-            movie.setRecentSearch(true);
-            moviesDbFactory.addItem(movie);
-        } else {
-            updateSearchedMovie(movie, true);
-        }
+    public LiveData<String> getFilter() {
+        return getFilter;
     }
 
-    public void updateSearchedMovie(Movies movie, boolean update) {
-        moviesDbFactory.updateSearchItem(movie, update);
+    public void setSearchQuery(String searchQuery) {
+        getFilter.setValue(searchQuery);
     }
-
 
 }
